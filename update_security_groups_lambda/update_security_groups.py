@@ -157,7 +157,7 @@ def get_security_groups_for_update(client):
         "Signature": "EXAMPLE",
         "SigningCertUrl": "EXAMPLE",
         "MessageId": "95df01b4-ee98-5cb9-9903-4c221d41eb5e",
-        "Message": "{\"create-time\": \"yyyy-mm-ddThh:mm:ss+00:00\", \"synctoken\": \"0123456789\", "\"md5\": \"03a8199d0c03ddfec0e542f8bf650ee7\", \"url\": \"https://ip-ranges.amazonaws.com/ip-ranges.json\"}",
+        "Message": "{\"create-time\": \"yyyy-mm-ddThh:mm:ss+00:00\", \"synctoken\": \"0123456789\", \"md5\": \"03a8199d0c03ddfec0e542f8bf650ee7\", \"url\": \"https://ip-ranges.amazonaws.com/ip-ranges.json\"}",
         "Type": "Notification",
         "UnsubscribeUrl": "EXAMPLE",
         "TopicArn": "arn:aws:sns:EXAMPLE",
