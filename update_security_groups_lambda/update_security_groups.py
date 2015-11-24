@@ -46,7 +46,7 @@ def get_ip_groups_json(url, expected_hash):
     hash = m.hexdigest()
     
     if hash != expected_hash:
-        raise Exception('MD5 Missmatch: got ' + hash + ' expected ' + expected_hash)
+        raise Exception('MD5 Mismatch: got ' + hash + ' expected ' + expected_hash)
     
     return ip_json
     
