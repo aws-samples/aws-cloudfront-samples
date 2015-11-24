@@ -80,25 +80,36 @@ def update_security_groups(new_ranges):
 def update_security_group(client, group, new_ranges):
     added = 0
     removed = 0
-    for permission in group['IpPermissions']:
-        if INGRESS_PORTS.count(permission['ToPort']) > 0:
-            old_prefixes = list()
-            to_revoke = list()
+
+    if len(group['IpPermissions']) > 0:
+        for permission in group['IpPermissions']:
+            if INGRESS_PORTS.count(permission['ToPort']) > 0:
+                old_prefixes = list()
+                to_revoke = list()
+                to_add = list()
+                for range in permission['IpRanges']:
+                    cidr = range['CidrIp']
+                    old_prefixes.append(cidr)
+                    if new_ranges.count(cidr) == 0:
+                        to_revoke.append(range)
+                        print(group['GroupId'] + ": Revoking " + cidr + ":" + str(permission['ToPort']))
+            
+                for range in new_ranges:
+                    if old_prefixes.count(range) == 0:
+                        to_add.append({ 'CidrIp': range })
+                        print(group['GroupId'] + ": Adding " + range + ":" + str(permission['ToPort']))
+            
+                removed += revoke_permissions(client, group, permission, to_revoke)
+                added += add_permissions(client, group, permission, to_add)
+    else:        
+        for port in INGRESS_PORTS:
             to_add = list()
-            for range in permission['IpRanges']:
-                cidr = range['CidrIp']
-                old_prefixes.append(cidr)
-                if new_ranges.count(cidr) == 0:
-                    to_revoke.append(range)
-                    print(group['GroupId'] + ": Revoking " + cidr + ":" + str(permission['ToPort']))
-            
             for range in new_ranges:
-                if old_prefixes.count(range) == 0:
-                    to_add.append({ 'CidrIp': range })
-                    print(group['GroupId'] + ": Adding " + cidr + ":" + str(permission['ToPort']))
-            
-            removed += revoke_permissions(client, group, permission, to_revoke)
+                to_add.append({ 'CidrIp': range })
+                print(group['GroupId'] + ": Adding " + range + ":" + str(port))
+            permission = { 'ToPort': port, 'FromPort': port, 'IpProtocol': 'tcp'}
             added += add_permissions(client, group, permission, to_add)
+
     print (group['GroupId'] + ": Added " + str(added) + ", Revoked " + str(removed))
     return (added > 0 or removed > 0)
 
