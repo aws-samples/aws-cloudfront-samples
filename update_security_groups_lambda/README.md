@@ -16,7 +16,7 @@ This lambda function is designed to be subscribed to the
 SNS topic. In the _Add Event Source_ dialog, select **SNS** in the *Event source type*, and populate *SNS Topic* with `arn:aws:sns:us-east-1:806199016981:AmazonIpSpaceChanged`.
 
 
-## Permissions
+## Policy
 
 To be able to make sufficient use of this Lambda function, you will require a role with a number of permissions. An example policy is as follows:
 
@@ -30,7 +30,7 @@ To be able to make sufficient use of this Lambda function, you will require a ro
                 "ec2:AuthorizeSecurityGroupIngress",
                 "ec2:RevokeSecurityGroupIngress"
             ],
-            "Resource": "arn:aws:ec2:[region]:1111222233334444:security-group/*"
+            "Resource": "arn:aws:ec2:[region]:[account-id]:security-group/*"
         },
         {
             "Effect": "Allow",
@@ -50,9 +50,9 @@ To be able to make sufficient use of this Lambda function, you will require a ro
 }
 ```
 
-Be sure to replace `[region]` with the AWS Region for your security groups, and `1111222233334444` with your account number.
+Be sure to replace `[region]` with the AWS Region for your security groups, and `[account-id]` with your account number.
 
-For more informationi on ip-ranges.json, read the documentation on [AWS IP Address Ranges](http://docs.aws.amazon.com/general/latest/gr/aws-ip-ranges.html).
+For more information on ip-ranges.json, read the documentation on [AWS IP Address Ranges](http://docs.aws.amazon.com/general/latest/gr/aws-ip-ranges.html).
 
 ***
 
