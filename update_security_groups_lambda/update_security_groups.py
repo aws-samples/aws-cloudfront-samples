@@ -22,7 +22,7 @@ SECURITY_GROUP_TAGS = { 'Name': 'cloudfront', 'AutoUpdate': 'true' }
 
 def lambda_handler(event, context):
     print("Received event: " + json.dumps(event, indent=2))
-    message = event['Records'][0]['Sns']['Message']
+    message = json.loads(event['Records'][0]['Sns']['Message'])
     
     # Load the ip ranges from the url
     ip_ranges = json.loads(get_ip_groups_json(message['url'], message['md5']))
@@ -168,12 +168,7 @@ def get_security_groups_for_update(client):
         "Signature": "EXAMPLE",
         "SigningCertUrl": "EXAMPLE",
         "MessageId": "95df01b4-ee98-5cb9-9903-4c221d41eb5e",
-        "Message": {
-          "create-time": "yyyy-mm-ddThh:mm:ss+00:00",
-          "synctoken": "0123456789",
-          "md5": "7fd59f5c7f5cf643036cbd4443ad3e4b",
-          "url": "https://ip-ranges.amazonaws.com/ip-ranges.json"
-        },
+        "Message": "{\"create-time\": \"yyyy-mm-ddThh:mm:ss+00:00\", \"synctoken\": \"0123456789\", \"md5\": \"03a8199d0c03ddfec0e542f8bf650ee7\", \"url\": \"https://ip-ranges.amazonaws.com/ip-ranges.json\"}",
         "Type": "Notification",
         "UnsubscribeUrl": "EXAMPLE",
         "TopicArn": "arn:aws:sns:EXAMPLE",
