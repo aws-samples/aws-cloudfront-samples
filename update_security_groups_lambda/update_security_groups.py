@@ -76,7 +76,7 @@ def update_security_groups(new_ranges):
             http_updated += 1
             result.append('Updated ' + group['GroupId'])
     for group in https_group:
-        if update_security_group(client, group, new_ranges, INGRESS_PORTS[1]):
+        if update_security_group(client, group, new_ranges, INGRESS_PORTS['Https']):
             https_updated += 1
             result.append('Updated ' + group['GroupId'])
 
@@ -91,7 +91,7 @@ def update_security_group(client, group, new_ranges, port):
 
     if len(group['IpPermissions']) > 0:
         for permission in group['IpPermissions']:
-            if INGRESS_PORTS.count(permission['ToPort']) > 0:
+            if permission['FromPort'] <= port and permission['ToPort'] >= port :
                 old_prefixes = list()
                 to_revoke = list()
                 to_add = list()
