@@ -16,10 +16,11 @@ import urllib2
 # Name of the service, as seen in the ip-groups.json file, to extract information for
 SERVICE = "CLOUDFRONT"
 # Ports your application uses that need inbound permissions from the service for
-INGRESS_PORTS = { 'Http' : 80, 'Https': 443 }
+INGRESS_PORTS = { 'Http' : [80,80], 'Https': [443,443], '80-443' : [80,443] }
 # Tags which identify the security groups you want to update
 SECURITY_GROUP_TAG_FOR_HTTP = { 'Name': 'cloudfront', 'AutoUpdate': 'true', 'Protocol': 'http' }
 SECURITY_GROUP_TAG_FOR_HTTPS = { 'Name': 'cloudfront', 'AutoUpdate': 'true', 'Protocol': 'https' }
+SECURITY_GROUP_TAG_FOR_80_443 = { 'Name': 'cloudfront', 'AutoUpdate': 'true', 'PortRange': '80-443' }
 
 def lambda_handler(event, context):
     print("Received event: " + json.dumps(event, indent=2))
@@ -64,34 +65,44 @@ def update_security_groups(new_ranges):
     client = boto3.client('ec2')
 
     http_group = get_security_groups_for_update(client, SECURITY_GROUP_TAG_FOR_HTTP)
-    https_group = get_security_groups_for_update(client, SECURITY_GROUP_TAG_FOR_HTTPS)
     print ('Found ' + str(len(http_group)) + ' HttpSecurityGroups to update')
+
+    https_group = get_security_groups_for_update(client, SECURITY_GROUP_TAG_FOR_HTTPS)
     print ('Found ' + str(len(https_group)) + ' HttpsSecurityGroups to update')
+
+    range_group = get_security_groups_for_update(client, SECURITY_GROUP_TAG_FOR_80_443)
+    print ('Found ' + str(len(range_group)) + ' PortRange (80-443) SecurityGroups to update')
 
     result = list()
     http_updated = 0
     https_updated = 0
+    range_updated = 0
     for group in http_group:
-        if update_security_group(client, group, new_ranges, INGRESS_PORTS['Http']):
+        if update_security_group(client, group, new_ranges, INGRESS_PORTS['Http'][0], INGRESS_PORTS['Http'][1]):
             http_updated += 1
             result.append('Updated ' + group['GroupId'])
     for group in https_group:
-        if update_security_group(client, group, new_ranges, INGRESS_PORTS['Https']):
+        if update_security_group(client, group, new_ranges, INGRESS_PORTS['Https'][0], INGRESS_PORTS['Https'][1]):
             https_updated += 1
+            result.append('Updated ' + group['GroupId'])
+    for group in range_group:
+        if update_security_group(client, group, new_ranges, INGRESS_PORTS['80-443'][0], INGRESS_PORTS['80-443'][1]):
+            range_updated += 1
             result.append('Updated ' + group['GroupId'])
 
     result.append('Updated ' + str(http_updated) + ' of ' + str(len(http_group)) + ' HttpSecurityGroups')
     result.append('Updated ' + str(https_updated) + ' of ' + str(len(https_group)) + ' HttpsSecurityGroups')
+    result.append('Updated ' + str(range_updated) + ' of ' + str(len(range_group)) + ' PortRange (80-443) SecurityGroups')
 
     return result
 
-def update_security_group(client, group, new_ranges, port):
+def update_security_group(client, group, new_ranges, fromPort, toPort ):
     added = 0
     removed = 0
 
     if len(group['IpPermissions']) > 0:
         for permission in group['IpPermissions']:
-            if permission['FromPort'] <= port and permission['ToPort'] >= port :
+            if permission['FromPort'] <= fromPort and permission['ToPort'] >= toPort :
                 old_prefixes = list()
                 to_revoke = list()
                 to_add = list()
@@ -113,8 +124,8 @@ def update_security_group(client, group, new_ranges, port):
         to_add = list()
         for range in new_ranges:
             to_add.append({ 'CidrIp': range })
-            print(group['GroupId'] + ": Adding " + range + ":" + str(port))
-        permission = { 'ToPort': port, 'FromPort': port, 'IpProtocol': 'tcp'}
+            print(group['GroupId'] + ": Adding " + range + ":" + str(fromPort) + "-" + str(toPort))
+        permission = { 'ToPort': toPort, 'FromPort': fromPort, 'IpProtocol': 'tcp'}
         added += add_permissions(client, group, permission, to_add)
 
     print (group['GroupId'] + ": Added " + str(added) + ", Revoked " + str(removed))
