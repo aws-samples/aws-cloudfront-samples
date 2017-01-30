@@ -6,7 +6,10 @@ with the CloudFront IP range changes.
 
 ## Security Group
 
-This Lambda function updates EC2 security groups tagged with `Name: cloudfront` and `AutoUpdate: true` and a `Protocol` tag with value `http` or `https`.
+This Lambda function updates EC2 security groups tagged with 
+..*    `Name: cloudfront` and 
+..*    `AutoUpdate: true` and a
+..*    `Protocol` tag with value `http` or `https` or `PortRange` tag with value `80-443`
 
 
 ## Event Source
