@@ -8,15 +8,14 @@ update EC2 security group ingress rules when CloudFront IP ranges change.
 
 By subscribing this function to the SNS topic
 [AmazonIpSpaceChanged](http://docs.aws.amazon.com/general/latest/gr/aws-ip-ranges.html#subscribe-notifications)
-your security groups tagged with `Name: cloudfront` and `AutoUpdate: true` will be
-updated accordingly.
+your security groups that are properly tagged will be updated accordingly.
 
 
 For more informationi on ip-ranges.json, read the documentation on [AWS IP Address Ranges](http://docs.aws.amazon.com/general/latest/gr/aws-ip-ranges.html).
 
 ***
 
-Copyright 2015 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance with the License. A copy of the License is located at
 

@@ -1,9 +1,12 @@
 '''
-Copyright 2016 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
 
 Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance with the License. A copy of the License is located at
 
+
     http://aws.amazon.com/apache2.0/
+
 
 or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 '''
@@ -18,8 +21,10 @@ SERVICE = "CLOUDFRONT"
 # Ports your application uses that need inbound permissions from the service for
 INGRESS_PORTS = { 'Http' : 80, 'Https': 443 }
 # Tags which identify the security groups you want to update
-SECURITY_GROUP_TAG_FOR_HTTP = { 'Name': 'cloudfront', 'AutoUpdate': 'true', 'Protocol': 'http' }
-SECURITY_GROUP_TAG_FOR_HTTPS = { 'Name': 'cloudfront', 'AutoUpdate': 'true', 'Protocol': 'https' }
+SECURITY_GROUP_TAG_FOR_GLOBAL_HTTP = { 'Name': 'cloudfront_g', 'AutoUpdate': 'true', 'Protocol': 'http' }
+SECURITY_GROUP_TAG_FOR_GLOBAL_HTTPS = { 'Name': 'cloudfront_g', 'AutoUpdate': 'true', 'Protocol': 'https' }
+SECURITY_GROUP_TAG_FOR_REGION_HTTP = { 'Name': 'cloudfront_r', 'AutoUpdate': 'true', 'Protocol': 'http' }
+SECURITY_GROUP_TAG_FOR_REGION_HTTPS = { 'Name': 'cloudfront_r', 'AutoUpdate': 'true', 'Protocol': 'https' }
 
 def lambda_handler(event, context):
     print("Received event: " + json.dumps(event, indent=2))
@@ -29,10 +34,12 @@ def lambda_handler(event, context):
     ip_ranges = json.loads(get_ip_groups_json(message['url'], message['md5']))
 
     # extract the service ranges
-    cf_ranges = get_ranges_for_service(ip_ranges, SERVICE)
+    global_cf_ranges = get_ranges_for_service(ip_ranges, SERVICE, "GLOBAL")
+    region_cf_ranges = get_ranges_for_service(ip_ranges, SERVICE, "REGION")
+    ip_ranges = { "GLOBAL": global_cf_ranges, "REGION": region_cf_ranges }
 
     # update the security groups
-    result = update_security_groups(cf_ranges)
+    result = update_security_groups(ip_ranges)
 
     return result
 
@@ -51,11 +58,11 @@ def get_ip_groups_json(url, expected_hash):
 
     return ip_json
 
-def get_ranges_for_service(ranges, service):
+def get_ranges_for_service(ranges, service, subset):
     service_ranges = list()
     for prefix in ranges['prefixes']:
-        if prefix['service'] == service:
-            print('Found ' + service + ' range: ' + prefix['ip_prefix'])
+        if prefix['service'] == service and ((subset == prefix['region'] and subset == "GLOBAL") or (subset != 'GLOBAL' and prefix['region'] != 'GLOBAL')):
+            print('Found ' + service + ' region: ' + prefix['region'] + ' range: ' + prefix['ip_prefix'])
             service_ranges.append(prefix['ip_prefix'])
 
     return service_ranges
@@ -63,25 +70,43 @@ def get_ranges_for_service(ranges, service):
 def update_security_groups(new_ranges):
     client = boto3.client('ec2')
 
-    http_group = get_security_groups_for_update(client, SECURITY_GROUP_TAG_FOR_HTTP)
-    https_group = get_security_groups_for_update(client, SECURITY_GROUP_TAG_FOR_HTTPS)
-    print ('Found ' + str(len(http_group)) + ' HttpSecurityGroups to update')
-    print ('Found ' + str(len(https_group)) + ' HttpsSecurityGroups to update')
+    global_http_group = get_security_groups_for_update(client, SECURITY_GROUP_TAG_FOR_GLOBAL_HTTP)
+    global_https_group = get_security_groups_for_update(client, SECURITY_GROUP_TAG_FOR_GLOBAL_HTTPS)
+    region_http_group = get_security_groups_for_update(client, SECURITY_GROUP_TAG_FOR_REGION_HTTP)
+    region_https_group = get_security_groups_for_update(client, SECURITY_GROUP_TAG_FOR_REGION_HTTPS)
+
+    print ('Found ' + str(len(global_http_group)) + ' CloudFront_g HttpSecurityGroups to update')
+    print ('Found ' + str(len(global_https_group)) + ' CloudFront_g HttpsSecurityGroups to update')
+    print ('Found ' + str(len(region_http_group)) + ' CloudFront_r HttpSecurityGroups to update')
+    print ('Found ' + str(len(region_https_group)) + ' CloudFront_r HttpsSecurityGroups to update')
 
     result = list()
-    http_updated = 0
-    https_updated = 0
-    for group in http_group:
-        if update_security_group(client, group, new_ranges, INGRESS_PORTS['Http']):
-            http_updated += 1
+    global_http_updated = 0
+    global_https_updated = 0
+    region_http_updated = 0
+    region_https_updated = 0
+
+    for group in global_http_group:
+        if update_security_group(client, group, new_ranges["GLOBAL"], INGRESS_PORTS['Http']):
+            global_http_updated += 1
             result.append('Updated ' + group['GroupId'])
-    for group in https_group:
-        if update_security_group(client, group, new_ranges, INGRESS_PORTS['Https']):
-            https_updated += 1
+    for group in global_https_group:
+        if update_security_group(client, group, new_ranges["GLOBAL"], INGRESS_PORTS['Https']):
+            global_https_updated += 1
+            result.append('Updated ' + group['GroupId'])
+    for group in region_http_group:
+        if update_security_group(client, group, new_ranges["REGION"], INGRESS_PORTS['Http']):
+            region_http_updated += 1
+            result.append('Updated ' + group['GroupId'])
+    for group in region_https_group:
+        if update_security_group(client, group, new_ranges["REGION"], INGRESS_PORTS['Https']):
+            region_https_updated += 1
             result.append('Updated ' + group['GroupId'])
 
-    result.append('Updated ' + str(http_updated) + ' of ' + str(len(http_group)) + ' HttpSecurityGroups')
-    result.append('Updated ' + str(https_updated) + ' of ' + str(len(https_group)) + ' HttpsSecurityGroups')
+    result.append('Updated ' + str(global_http_updated) + ' of ' + str(len(global_http_group)) + ' CloudFront_g HttpSecurityGroups')
+    result.append('Updated ' + str(global_https_updated) + ' of ' + str(len(global_https_group)) + ' CloudFront_g HttpsSecurityGroups')
+    result.append('Updated ' + str(region_http_updated) + ' of ' + str(len(region_http_group)) + ' CloudFront_r HttpSecurityGroups')
+    result.append('Updated ' + str(region_https_updated) + ' of ' + str(len(region_https_group)) + ' CloudFront_r HttpsSecurityGroups')
 
     return result
 
@@ -175,7 +200,7 @@ Sample Event From SNS:
         "Signature": "EXAMPLE",
         "SigningCertUrl": "EXAMPLE",
         "MessageId": "95df01b4-ee98-5cb9-9903-4c221d41eb5e",
-        "Message": "{\"create-time\": \"yyyy-mm-ddThh:mm:ss+00:00\", \"synctoken\": \"0123456789\", \"md5\": \"03a8199d0c03ddfec0e542f8bf650ee7\", \"url\": \"https://ip-ranges.amazonaws.com/ip-ranges.json\"}",
+        "Message": "{\"create-time\": \"yyyy-mm-ddThh:mm:ss+00:00\", \"synctoken\": \"0123456789\", \"md5\": \"45be1ba64fe83acb7ef247bccbc45704\", \"url\": \"https://ip-ranges.amazonaws.com/ip-ranges.json\"}",
         "Type": "Notification",
         "UnsubscribeUrl": "EXAMPLE",
         "TopicArn": "arn:aws:sns:EXAMPLE",
