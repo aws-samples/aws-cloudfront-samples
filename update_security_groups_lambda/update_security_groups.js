@@ -74,7 +74,6 @@ async function updateSecurityGroups(newRanges) {
   let regionHttpGroup = await getSecurityGroupsForUpdate(ec2, SECURITY_GROUP_TAG_FOR_REGION_HTTP).catch((err) => { throw new Error(err); });
   let regionHttpsGroup = await getSecurityGroupsForUpdate(ec2, SECURITY_GROUP_TAG_FOR_REGION_HTTPS).catch((err) => { throw new Error(err); });
 
-
   console.log(`Found ${JSON.stringify(globalHttpGroup)} Cloudfront_g HttpSecurityGroups to update`);
   console.log(`Found ${JSON.stringify(globalHttpsGroup)} Cloudfront_g HttpsSecurityGroups to update`);
   console.log(`Found ${JSON.stringify(globalHttpGroup)} Cloudfront_r HttpSecurityGroups to update`);
@@ -170,9 +169,7 @@ async function updateSecurityGroup(client, group, newRanges, port) {
         }
 
         removed += await revokePermissions(client, group, permission, toRevoke).catch((err) => { throw new Error(err); });
-
         added += await addPermissions(client, group, permission, toAdd).catch((err) => { throw new Error(err); });
-
       }
     }
   } else {
