@@ -14,7 +14,7 @@ or in the "license" file accompanying this file. This file is distributed on an 
 import boto3
 import hashlib
 import json
-import urllib2
+from urllib.request import urlopen
 
 # Name of the service, as seen in the ip-groups.json file, to extract information for
 SERVICE = "CLOUDFRONT"
@@ -46,7 +46,7 @@ def lambda_handler(event, context):
 def get_ip_groups_json(url, expected_hash):
     print("Updating from " + url)
 
-    response = urllib2.urlopen(url)
+    response = urlopen(url)
     ip_json = response.read()
 
     m = hashlib.md5()
@@ -173,7 +173,7 @@ def add_permissions(client, group, permission, to_add):
 
 def get_security_groups_for_update(client, security_group_tag):
     filters = list();
-    for key, value in security_group_tag.iteritems():
+    for key, value in security_group_tag.items():
         filters.extend(
             [
                 { 'Name': "tag-key", 'Values': [ key ] },
