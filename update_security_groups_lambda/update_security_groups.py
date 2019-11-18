@@ -14,6 +14,7 @@ or in the "license" file accompanying this file. This file is distributed on an 
 import boto3
 import hashlib
 import json
+import os
 import urllib.request, urllib.error, urllib.parse
 
 # Name of the service, as seen in the ip-groups.json file, to extract information for
@@ -21,10 +22,15 @@ SERVICE = "CLOUDFRONT"
 # Ports your application uses that need inbound permissions from the service for
 INGRESS_PORTS = { 'Http' : 80, 'Https': 443 }
 # Tags which identify the security groups you want to update
-SECURITY_GROUP_TAG_FOR_GLOBAL_HTTP = { 'Name': 'cloudfront_g', 'AutoUpdate': 'true', 'Protocol': 'http' }
-SECURITY_GROUP_TAG_FOR_GLOBAL_HTTPS = { 'Name': 'cloudfront_g', 'AutoUpdate': 'true', 'Protocol': 'https' }
-SECURITY_GROUP_TAG_FOR_REGION_HTTP = { 'Name': 'cloudfront_r', 'AutoUpdate': 'true', 'Protocol': 'http' }
-SECURITY_GROUP_TAG_FOR_REGION_HTTPS = { 'Name': 'cloudfront_r', 'AutoUpdate': 'true', 'Protocol': 'https' }
+TAGS = { 
+    'Name': os.environ.get('TagName', 'Name'),
+    'AutoUpdate': os.environ.get('TagAutoUpdate', 'AutoUpdateTag'),
+    'Protocol': os.environ.get('TagProtocol', 'Protocol')
+}
+SECURITY_GROUP_TAG_FOR_GLOBAL_HTTP = { TAGS['Name']: 'cloudfront_g', TAGS['AutoUpdate']: 'true', TAGS['Protocol']: 'http' }
+SECURITY_GROUP_TAG_FOR_GLOBAL_HTTPS = { TAGS['Name']: 'cloudfront_g', TAGS['AutoUpdate']: 'true', TAGS['Protocol']: 'https' }
+SECURITY_GROUP_TAG_FOR_REGION_HTTP = { TAGS['Name']: 'cloudfront_r', TAGS['AutoUpdate']: 'true', TAGS['Protocol']: 'http' }
+SECURITY_GROUP_TAG_FOR_REGION_HTTPS = { TAGS['Name']: 'cloudfront_r', TAGS['AutoUpdate']: 'true', TAGS['Protocol']: 'https' }
 
 def lambda_handler(event, context):
     print(("Received event: " + json.dumps(event, indent=2)))
