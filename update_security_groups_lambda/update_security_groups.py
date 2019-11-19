@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 # Name of the service, as seen in the ip-groups.json file, to extract information for
 SERVICE = "CLOUDFRONT"
 # Ports your application uses that need inbound permissions from the service for
-INGRESS_PORTS = { 'Http' : 80, 'Https': 443 }
+INGRESS_PORTS = { 'Http': 80, 'Https': 443 }
 # Tags which identify the security groups you want to update
 TAGS = { 
     'Name': os.environ.get('TagName', 'Name'),
@@ -142,7 +142,7 @@ def update_security_group(client, group, new_ranges, port):
 
     if len(group['IpPermissions']) > 0:
         for permission in group['IpPermissions']:
-            if permission['FromPort'] <= port and permission['ToPort'] >= port :
+            if permission['FromPort'] <= port and permission['ToPort'] >= port:
                 old_prefixes = list()
                 to_revoke = list()
                 to_add = list()
