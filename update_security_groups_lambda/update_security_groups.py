@@ -27,10 +27,16 @@ SERVICE = "CLOUDFRONT"
 # Ports your application uses that need inbound permissions from the service for
 INGRESS_PORTS = { 'Http' : 80, 'Https': 443 }
 # Tags which identify the security groups you want to update
-SECURITY_GROUP_TAG_FOR_GLOBAL_HTTP = { 'Name': 'cloudfront_g', 'AutoUpdate': 'true', 'Protocol': 'http' }
-SECURITY_GROUP_TAG_FOR_GLOBAL_HTTPS = { 'Name': 'cloudfront_g', 'AutoUpdate': 'true', 'Protocol': 'https' }
-SECURITY_GROUP_TAG_FOR_REGION_HTTP = { 'Name': 'cloudfront_r', 'AutoUpdate': 'true', 'Protocol': 'http' }
-SECURITY_GROUP_TAG_FOR_REGION_HTTPS = { 'Name': 'cloudfront_r', 'AutoUpdate': 'true', 'Protocol': 'https' }
+TAGS = { 
+    'Name': os.environ.get('TagName', 'Name'),
+    'AutoUpdate': os.environ.get('TagAutoUpdate', 'AutoUpdateTag'),
+    'Protocol': os.environ.get('TagProtocol', 'Protocol')
+}
+SECURITY_GROUP_TAG_FOR_GLOBAL_HTTP = { TAGS['Name']: 'cloudfront_g', TAGS['AutoUpdate']: 'true', TAGS['Protocol']: 'http' }
+SECURITY_GROUP_TAG_FOR_GLOBAL_HTTPS = { TAGS['Name']: 'cloudfront_g', TAGS['AutoUpdate']: 'true', TAGS['Protocol']: 'https' }
+SECURITY_GROUP_TAG_FOR_REGION_HTTP = { TAGS['Name']: 'cloudfront_r', TAGS['AutoUpdate']: 'true', TAGS['Protocol']: 'http' }
+SECURITY_GROUP_TAG_FOR_REGION_HTTPS = { TAGS['Name']: 'cloudfront_r', TAGS['AutoUpdate']: 'true', TAGS['Protocol']: 'https' }
+
 
 logger.setLevel(logging.INFO)
 try:
@@ -49,15 +55,16 @@ def lambda_handler(event, context):
     # Load the ip ranges from the url
     ip_ranges = json.loads(get_ip_groups_json(message['url'], message['md5']))
 
-    # extract the service ranges
+    # Extract the service ranges
     global_cf_ranges = get_ranges_for_service(ip_ranges, SERVICE, "GLOBAL")
     region_cf_ranges = get_ranges_for_service(ip_ranges, SERVICE, "REGION")
     ip_ranges = { "GLOBAL": global_cf_ranges, "REGION": region_cf_ranges }
 
-    # update the security groups
+    # Update the security groups
     result = update_security_groups(ip_ranges)
 
     return result
+
 
 def get_ip_groups_json(url, expected_hash):
     logger.info("Updating from " + url)
@@ -74,6 +81,7 @@ def get_ip_groups_json(url, expected_hash):
 
     return ip_json
 
+
 def get_ranges_for_service(ranges, service, subset):
     service_ranges = list()
     for prefix in ranges['prefixes']:
@@ -82,6 +90,7 @@ def get_ranges_for_service(ranges, service, subset):
             service_ranges.append(prefix['ip_prefix'])
 
     return service_ranges
+
 
 def update_security_groups(new_ranges):
     client = boto3.client('ec2')
@@ -126,6 +135,7 @@ def update_security_groups(new_ranges):
 
     return result
 
+
 def update_security_group(client, group, new_ranges, port):
     added = 0
     removed = 0
@@ -161,6 +171,7 @@ def update_security_group(client, group, new_ranges, port):
     logger.info(group['GroupId'] + ": Added " + str(added) + ", Revoked " + str(removed))
     return (added > 0 or removed > 0)
 
+
 def revoke_permissions(client, group, permission, to_revoke):
     if len(to_revoke) > 0:
         revoke_params = {
@@ -173,6 +184,7 @@ def revoke_permissions(client, group, permission, to_revoke):
         client.revoke_security_group_ingress(GroupId=group['GroupId'], IpPermissions=[revoke_params])
 
     return len(to_revoke)
+
 
 def add_permissions(client, group, permission, to_add):
     if len(to_add) > 0:
@@ -187,8 +199,9 @@ def add_permissions(client, group, permission, to_add):
 
     return len(to_add)
 
+
 def get_security_groups_for_update(client, security_group_tag):
-    filters = list();
+    filters = list()
     for key, value in security_group_tag.items():
         filters.extend(
             [
@@ -200,6 +213,7 @@ def get_security_groups_for_update(client, security_group_tag):
     response = client.describe_security_groups(Filters=filters)
 
     return response['SecurityGroups']
+
 
 '''
 Sample Event From SNS:
