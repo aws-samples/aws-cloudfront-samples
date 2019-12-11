@@ -25,7 +25,7 @@ INGRESS_PORTS = { 'Http' : 80, 'Https': 443 }
 # Tags which identify the security groups you want to update
 TAGS = { 
     'Name': os.environ.get('TagName', 'Name'),
-    'AutoUpdate': os.environ.get('TagAutoUpdate', 'AutoUpdateTag'),
+    'AutoUpdate': os.environ.get('TagAutoUpdate', 'AutoUpdate'),
     'Protocol': os.environ.get('TagProtocol', 'Protocol')
 }
 SECURITY_GROUP_TAG_FOR_GLOBAL_HTTP = { TAGS['Name']: 'cloudfront_g', TAGS['AutoUpdate']: 'true', TAGS['Protocol']: 'http' }
