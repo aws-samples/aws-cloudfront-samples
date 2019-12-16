@@ -12,16 +12,20 @@ or in the "license" file accompanying this file. This file is distributed on an 
 '''
 
 import boto3
+from distutils.util import strtobool
 import hashlib
 import json
+import logging
 import os
 import urllib.request, urllib.error, urllib.parse
+
+logger = logging.getLogger(__name__)
 
 
 # Name of the service, as seen in the ip-groups.json file, to extract information for
 SERVICE = "CLOUDFRONT"
 # Ports your application uses that need inbound permissions from the service for
-INGRESS_PORTS = { 'Http' : 80, 'Https': 443 }
+INGRESS_PORTS = { 'Http': 80, 'Https': 443 }
 # Tags which identify the security groups you want to update
 TAGS = { 
     'Name': os.environ.get('TagName', 'Name'),
@@ -34,9 +38,19 @@ SECURITY_GROUP_TAG_FOR_REGION_HTTP = { TAGS['Name']: 'cloudfront_r', TAGS['AutoU
 SECURITY_GROUP_TAG_FOR_REGION_HTTPS = { TAGS['Name']: 'cloudfront_r', TAGS['AutoUpdate']: 'true', TAGS['Protocol']: 'https' }
 
 
+logger.setLevel(logging.INFO)
+try:
+     if bool(strtobool(os.environ.get('DEBUG', ''))):
+         logger.setLevel(logging.DEBUG)
+except ValueError:
+    pass
+
+
 def lambda_handler(event, context):
-    print("Received event: " + json.dumps(event, indent=2))
-    message = json.loads(event['Records'][0]['Sns']['Message'])
+    logger.debug("Received event: " + json.dumps(event, indent=2))
+    event_sns = event['Records'][0]['Sns']
+    logger.info("Received SNS event: " + event_sns['MessageId'])
+    message = json.loads(event_sns['Message'])
 
     # Load the ip ranges from the url
     ip_ranges = json.loads(get_ip_groups_json(message['url'], message['md5']))
@@ -53,7 +67,7 @@ def lambda_handler(event, context):
 
 
 def get_ip_groups_json(url, expected_hash):
-    print("Updating from " + url)
+    logger.info("Updating from " + url)
 
     response = urllib.request.urlopen(url)
     ip_json = response.read()
@@ -72,7 +86,7 @@ def get_ranges_for_service(ranges, service, subset):
     service_ranges = list()
     for prefix in ranges['prefixes']:
         if prefix['service'] == service and ((subset == prefix['region'] and subset == "GLOBAL") or (subset != 'GLOBAL' and prefix['region'] != 'GLOBAL')):
-            print('Found ' + service + ' region: ' + prefix['region'] + ' range: ' + prefix['ip_prefix'])
+            logger.debug('Found ' + service + ' region: ' + prefix['region'] + ' range: ' + prefix['ip_prefix'])
             service_ranges.append(prefix['ip_prefix'])
 
     return service_ranges
@@ -86,10 +100,10 @@ def update_security_groups(new_ranges):
     region_http_group = get_security_groups_for_update(client, SECURITY_GROUP_TAG_FOR_REGION_HTTP)
     region_https_group = get_security_groups_for_update(client, SECURITY_GROUP_TAG_FOR_REGION_HTTPS)
 
-    print('Found ' + str(len(global_http_group)) + ' CloudFront_g HttpSecurityGroups to update')
-    print('Found ' + str(len(global_https_group)) + ' CloudFront_g HttpsSecurityGroups to update')
-    print('Found ' + str(len(region_http_group)) + ' CloudFront_r HttpSecurityGroups to update')
-    print('Found ' + str(len(region_https_group)) + ' CloudFront_r HttpsSecurityGroups to update')
+    logger.info('Found ' + str(len(global_http_group)) + ' CloudFront_g HttpSecurityGroups to update')
+    logger.info('Found ' + str(len(global_https_group)) + ' CloudFront_g HttpsSecurityGroups to update')
+    logger.info('Found ' + str(len(region_http_group)) + ' CloudFront_r HttpSecurityGroups to update')
+    logger.info('Found ' + str(len(region_https_group)) + ' CloudFront_r HttpsSecurityGroups to update')
 
     result = list()
     global_http_updated = 0
@@ -128,7 +142,7 @@ def update_security_group(client, group, new_ranges, port):
 
     if len(group['IpPermissions']) > 0:
         for permission in group['IpPermissions']:
-            if permission['FromPort'] <= port and permission['ToPort'] >= port :
+            if permission['FromPort'] <= port and permission['ToPort'] >= port:
                 old_prefixes = list()
                 to_revoke = list()
                 to_add = list()
@@ -137,12 +151,12 @@ def update_security_group(client, group, new_ranges, port):
                     old_prefixes.append(cidr)
                     if new_ranges.count(cidr) == 0:
                         to_revoke.append(range)
-                        print(group['GroupId'] + ": Revoking " + cidr + ":" + str(permission['ToPort']))
+                        logger.debug(group['GroupId'] + ": Revoking " + cidr + ":" + str(permission['ToPort']))
 
                 for range in new_ranges:
                     if old_prefixes.count(range) == 0:
                         to_add.append({ 'CidrIp': range })
-                        print(group['GroupId'] + ": Adding " + range + ":" + str(permission['ToPort']))
+                        logger.debug(group['GroupId'] + ": Adding " + range + ":" + str(permission['ToPort']))
 
                 removed += revoke_permissions(client, group, permission, to_revoke)
                 added += add_permissions(client, group, permission, to_add)
@@ -150,11 +164,11 @@ def update_security_group(client, group, new_ranges, port):
         to_add = list()
         for range in new_ranges:
             to_add.append({ 'CidrIp': range })
-            print(group['GroupId'] + ": Adding " + range + ":" + str(port))
+            logger.debug(group['GroupId'] + ": Adding " + range + ":" + str(port))
         permission = { 'ToPort': port, 'FromPort': port, 'IpProtocol': 'tcp'}
         added += add_permissions(client, group, permission, to_add)
 
-    print(group['GroupId'] + ": Added " + str(added) + ", Revoked " + str(removed))
+    logger.info(group['GroupId'] + ": Added " + str(added) + ", Revoked " + str(removed))
     return (added > 0 or removed > 0)
 
 
