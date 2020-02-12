@@ -17,7 +17,7 @@ import hashlib
 import json
 import logging
 import os
-import urllib.request, urllib.error, urllib.parse
+import urllib3.request
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,8 @@ def lambda_handler(event, context):
 def get_ip_groups_json(url, expected_hash):
     logger.info("Updating from " + url)
 
-    response = urllib.request.urlopen(url)
+    http = urllib3.PoolManager()
+    response = http.request('GET', url)
     ip_json = response.read()
 
     m = hashlib.md5()
