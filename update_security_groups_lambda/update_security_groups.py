@@ -71,7 +71,7 @@ def get_ip_groups_json(url, expected_hash):
 
     http = urllib3.PoolManager()
     response = http.request('GET', url)
-    ip_json = response.read()
+    ip_json = response.data
 
     m = hashlib.md5()
     m.update(ip_json)
