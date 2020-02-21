@@ -27,7 +27,7 @@ SERVICE = "CLOUDFRONT"
 # Ports your application uses that need inbound permissions from the service for
 INGRESS_PORTS = { 'Http': 80, 'Https': 443 }
 # Tags which identify the security groups you want to update
-TAGS = { 
+TAGS = {
     'Name': os.environ.get('TagName', 'Name'),
     'AutoUpdate': os.environ.get('TagAutoUpdate', 'AutoUpdate'),
     'Protocol': os.environ.get('TagProtocol', 'Protocol')
@@ -71,7 +71,7 @@ def get_ip_groups_json(url, expected_hash):
 
     http = urllib3.PoolManager()
     response = http.request('GET', url)
-    ip_json = response.read()
+    ip_json = response.data
 
     m = hashlib.md5()
     m.update(ip_json)
