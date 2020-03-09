@@ -2,13 +2,12 @@
 
 ## update-security-groups
 
-A Lambda function for updating the **cloudfront** EC2 security group ingress rules
-with the CloudFront IP range changes.
+A Lambda function for updating EC2 security group ingress rules to permit ingress from Amazon CloudFront IPv4 addresses. See [this blog post](https://aws.amazon.com/blogs/security/how-to-automatically-update-your-security-groups-for-amazon-cloudfront-and-aws-waf-by-using-aws-lambda/)for discussion on how to use it and why it is useful.
 
+## Security Groups
 
-## Security Group
+This Lambda function updates security groups based on their tags. You can stipulate some number of ingress protocol/ports in the code. For each protocol/port number you specify, you will need to have 2 security groups (a *regional* and a *global* one). 
 
-This Lambda function updates a total possibility of 4 EC2 security groups tagged as the following:
 *  `Name: cloudfront_g` and `AutoUpdate: true` and a `Protocol` tag with value `http` or `https`.
 *  `Name: cloudfront_r` and `AutoUpdate: true` and a `Protocol` tag with value `http` or `https`.
 
