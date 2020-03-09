@@ -6,12 +6,21 @@ A Lambda function for updating EC2 security group ingress rules to permit ingres
 
 ## Security Groups
 
-This Lambda function updates security groups based on their tags. You can stipulate some number of ingress protocol/ports in the code. For each protocol/port number you specify, you will need to have 2 security groups (a *regional* and a *global* one). 
+This Lambda function updates security groups based on their tags. You can stipulate some number of ingress protocol/ports in the code. For each protocol/port number you specify, you will need to have 2 security groups (a *regional* and a *global* one).
 
-*  `Name: cloudfront_g` and `AutoUpdate: true` and a `Protocol` tag with value `http` or `https`.
-*  `Name: cloudfront_r` and `AutoUpdate: true` and a `Protocol` tag with value `http` or `https`.
+### Tagging Security Groups to be Managed by this Lambda Function
+For each protocol, create 2 security groups and put the following 3 tags on each one.
 
-**Note:** For CloudFront to properly connect to your origin over HTTP or HTTPS only, you will need two security groups with `Name: cloudfront_g` and `Name: cloudfront_r` set for http or https depending on the protocol used. If you require both HTTP and HTTPS protocols to your origin, you will need a total of 4 security groups.
+1. A global ingress security group:
+  * **Name**: `cloudfront_g`
+  * **AutoUpdate**: `true`
+  * **Protocol**: `http` (or some other value, depends on what you name your protocols in the code)
+2. A regional ingress security group:
+  * **Name**: `cloudfront_r`
+  * **AutoUpdate**: `true`
+  * **Protocol**: `http` (or some other value, depends on what you name your protocols in the code)
+
+If you allow both HTTP and HTTPS, for example, you will have 4 security groups that you will need to attach to your load balancer, EC2 instance, or other internet-facing ENI.
 
 ## Event Source
 
