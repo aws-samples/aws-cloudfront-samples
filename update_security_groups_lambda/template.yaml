@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Updates security groups to accept ingress from CloudFront edge IPs
+Resources:
+  UpdateCloudfrontSG:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: aws-cloudfront-samples/update_security_groups_lambda/update_security_groups.lambda_handler
+      Runtime: python3.6
+      Description: 'Updates security groups to accept ingress from CloudFront edge IPs'
+      MemorySize: 128
+      Timeout: 15
+      Environment:
+        Variables:
+          DEBUG: 'false'
+#    Events:
+#      awsIPSpace:
+#        Type: 'SNS'
+#        Properties:
+#          Topic: arn:aws:sns:us-east-1:806199016981:AmazonIpSpaceChanged
