@@ -107,17 +107,13 @@ def update_security_groups(new_ranges, rangeType):
         else:
             tagToFind = REGION_SG_TAGS    
         tagToFind['Protocol'] = curGroup
-        rangeToUpdate = get_security_groups_for_update(client, tagToFind)        
-        logging.info('Found {} groups tagged {}, proto {} to update'.format(
-                str(len(rangeToUpdate)),
-                tagToFind["Name"],
-                curGroup))
+        rangeToUpdate = get_security_groups_for_update(client, tagToFind)
+        msg = 'tagged Name: {}, Protocol: {} to update'.format( tagToFind["Name"], curGroup )
+        logging.info('Found {} groups {}'.format( str(len(rangeToUpdate)), msg )
 
         if len(rangeToUpdate) == 0:
-            result.append( 'No groups tagged Name: {}, Protocol: {} to update'.format(
-              tagToFind["Name"], curGroup ) )
-            logging.warning( 'No groups tagged Name: {}, Protocol: {} to update'.format(
-              tagToFind["Name"], curGroup ) )
+            result.append( 'No groups {}'.format(msg) )
+            logging.warning( 'No groups {}'.format(msg) )
         else:
             if update_security_group(client, rangeToUpdate[0], new_ranges, INGRESS_PORTS[curGroup] ):
                 result.append('Security Group {} updated.'.format( rangeToUpdate[0]['GroupId'] ) )
