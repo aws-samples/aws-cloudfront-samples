@@ -109,7 +109,7 @@ def update_security_groups(new_ranges, rangeType):
         tagToFind['Protocol'] = curGroup
         rangeToUpdate = get_security_groups_for_update(client, tagToFind)
         msg = 'tagged Name: {}, Protocol: {} to update'.format( tagToFind["Name"], curGroup )
-        logging.info('Found {} groups {}'.format( str(len(rangeToUpdate)), msg )
+        logging.info('Found {} groups {}'.format( str(len(rangeToUpdate)), msg ) )
 
         if len(rangeToUpdate) == 0:
             result.append( 'No groups {}'.format(msg) )
