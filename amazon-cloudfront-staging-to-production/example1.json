@@ -1,0 +1,9 @@
+{
+    "Aliases": {"Quantity": 1, "Items": ["www.example.com"]},
+    "Comment": "production distribution for www.example.com",
+    "Logging": {
+        "Enabled": true,
+        "IncludeCookies": false,
+        "Bucket": "loggingbucket.s3.amazonaws.com",
+        "Prefix": "examplecom-log" }
+}
