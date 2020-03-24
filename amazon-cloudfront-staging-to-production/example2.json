@@ -1,0 +1,16 @@
+{
+    "Aliases": {"Quantity": 1, "Items": ["www.example.com"]},
+    "Comment": "production distribution for www.example.com",
+    "Logging": {
+        "Enabled": true,
+        "IncludeCookies": false,
+        "Bucket": "loggingbucket.s3.amazonaws.com",
+        "Prefix": "examplecom-log" },
+    "ViewerCertificate": {
+        "ACMCertificateArn": "<arn:aws:acm:us-east-1:....>",
+        "SSLSupportMethod": "sni-only",
+        "MinimumProtocolVersion": "TLSv1.2_2018",
+        "Certificate": "<arn:aws:acm:us-east-1:....>",
+        "CertificateSource": "acm"
+    }
+}
