@@ -15,12 +15,14 @@ For each protocol, create 2 security groups and put the following 3 tags on each
   * **Name**: `cloudfront_g`
   * **AutoUpdate**: `true`
   * **Protocol**: `http` (or some other value, depends on what you name your protocols in the code)
+  * **EvenOrOdd**: `even` (or odd)
 2. A regional ingress security group:
   * **Name**: `cloudfront_r`
   * **AutoUpdate**: `true`
   * **Protocol**: `http` (or some other value, depends on what you name your protocols in the code)
+  * **EvenOrOdd**: `even` (or odd)
 
-If you allow both HTTP and HTTPS, for example, you will have 4 security groups that you will need to attach to your load balancer, EC2 instance, or other internet-facing ENI.
+If you allow both HTTP and HTTPS, for example, you will have 8 security groups that you will need to attach to your load balancer, EC2 instance, or other internet-facing ENI.
 
 ## Event Source
 

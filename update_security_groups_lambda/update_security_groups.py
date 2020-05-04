@@ -13,12 +13,13 @@ or in the "license" file accompanying this file. This file is distributed on an 
 
 # Ports your application uses that need inbound permissions from the service for
 # If all you're doing is HTTPS, this can be simply { 'https': 443 }
-INGRESS_PORTS = { 'http' : 80, 'https': 443, 'example': 8080 }
+INGRESS_PORTS = { 'https': 443 }
 # Tags which identify the security groups you want to update
 # For a group to be updated it will need to have 3 properties that are true:
 # 1. It has to be tagged 'Protocol: X' (Where 'X' is one of your INGRESS_PORTS above)
 # 2. It has to be tagged 'Name: cloudfront_g' or 'Name: cloudfront_r'
 # 3. It has to be tagged 'AutoUpdate: true'
+# 4. It has to be tagged 'EvenOrOdd: X' (Where 'X' is `even` or `odd`)
 # If any of these 3 are not true, the security group will be unmodified.
 GLOBAL_SG_TAGS = { 'Name': 'cloudfront_g', 'AutoUpdate': 'true' }
 REGION_SG_TAGS = { 'Name': 'cloudfront_r', 'AutoUpdate': 'true' }
@@ -99,31 +100,35 @@ def update_security_groups(new_ranges, rangeType):
     
     # All the security groups we will need to find.
     allSGs = INGRESS_PORTS.keys()
+    allTypes = ['even', 'odd'];
     # Iterate over every group, doing its global and regional versions
+    
     for curGroup in allSGs:
-        tagToFind = {}
-        if rangeType == "GLOBAL":
-            tagToFind = GLOBAL_SG_TAGS
-        else:
-            tagToFind = REGION_SG_TAGS    
-        tagToFind['Protocol'] = curGroup
-        rangeToUpdate = get_security_groups_for_update(client, tagToFind)
-        msg = 'tagged Name: {}, Protocol: {} to update'.format( tagToFind["Name"], curGroup )
-        logging.info('Found {} groups {}'.format( str(len(rangeToUpdate)), msg ) )
-
-        if len(rangeToUpdate) == 0:
-            result.append( 'No groups {}'.format(msg) )
-            logging.warning( 'No groups {}'.format(msg) )
-        else:
-            if update_security_group(client, rangeToUpdate[0], new_ranges, INGRESS_PORTS[curGroup] ):
-                result.append('Security Group {} updated.'.format( rangeToUpdate[0]['GroupId'] ) )
+        for curType in allTypes:
+            tagToFind = {}
+            if rangeType == "GLOBAL":
+                tagToFind = GLOBAL_SG_TAGS
             else:
-                result.append('Security Group {} unchanged.'.format( rangeToUpdate[0]['GroupId'] ) )
+                tagToFind = REGION_SG_TAGS    
+            tagToFind['Protocol'] = curGroup
+            tagToFind['EvenOrOdd'] = curType
+            rangeToUpdate = get_security_groups_for_update(client, tagToFind)
+            msg = 'tagged Name: {}, Protocol: {} to update'.format( tagToFind["Name"], curGroup )
+            logging.info('Found {} groups {}'.format( str(len(rangeToUpdate)), msg ) )
+
+            if len(rangeToUpdate) == 0:
+                result.append( 'No groups {}'.format(msg) )
+                logging.warning( 'No groups {}'.format(msg) )
+            else:
+                if update_security_group(client, rangeToUpdate[0], new_ranges, INGRESS_PORTS[curGroup], curType ):
+                    result.append('Security Group {} updated.'.format( rangeToUpdate[0]['GroupId'] ) )
+                else:
+                    result.append('Security Group {} unchanged.'.format( rangeToUpdate[0]['GroupId'] ) )
 
     return result
 
 
-def update_security_group(client, group, new_ranges, port):
+def update_security_group(client, group, new_ranges, port, even_odd):
     added = 0
     removed = 0
     
@@ -140,18 +145,25 @@ def update_security_group(client, group, new_ranges, port):
                         to_revoke.append(range)
                         logging.debug((group['GroupId'] + ": Revoking " + cidr + ":" + str(permission['ToPort'])))
 
+                x = 0
                 for range in new_ranges:
-                    if old_prefixes.count(range) == 0:
-                        to_add.append({ 'CidrIp': range })
-                        logging.debug((group['GroupId'] + ": Adding " + range + ":" + str(permission['ToPort'])))
+                    x += 1
+                    if (even_odd == "even" and ((x % 2) == 0)) or (even_odd == "odd" and ((x % 2) == 1)):
+                        if old_prefixes.count(range) == 0:
+                            to_add.append({ 'CidrIp': range })
+                            logging.debug((group['GroupId'] + ": Adding " + range + ":" + str(permission['ToPort'])))
 
                 removed += revoke_permissions(client, group, permission, to_revoke)
                 added += add_permissions(client, group, permission, to_add)
     else:
         to_add = list()
+        x = 0
         for range in new_ranges:
-            to_add.append({ 'CidrIp': range })
-            logging.info((group['GroupId'] + ": Adding " + range + ":" + str(port)))
+            x += 1
+            if (even_odd == "even" and ((x % 2) == 0)) or (even_odd == "odd" and ((x % 2) == 1)):
+                to_add.append({ 'CidrIp': range })
+                logging.info((group['GroupId'] + ": Adding " + range + ":" + str(port)))     
+            
         permission = { 'ToPort': port, 'FromPort': port, 'IpProtocol': 'tcp'}
         added += add_permissions(client, group, permission, to_add)
 
