@@ -115,11 +115,11 @@ def update_security_groups(new_ranges, rangeType):
             result.append( 'No groups {}'.format(msg) )
             logging.warning( 'No groups {}'.format(msg) )
         else:
-            for grp in rangeToUpdate:
-                if update_security_group(client, grp, new_ranges, INGRESS_PORTS[curGroup] ):
-                    result.append('Security Group {} updated.'.format( grp['GroupId'] ) )
+            for securityGroupToUpdate in rangeToUpdate:
+                if update_security_group(client, securityGroupToUpdate, new_ranges, INGRESS_PORTS[curGroup] ):
+                    result.append('Security Group {} updated.'.format( securityGroupToUpdate['GroupId'] ) )
                 else:
-                    result.append('Security Group {} unchanged.'.format( grp['GroupId'] ) )
+                    result.append('Security Group {} unchanged.'.format( securityGroupToUpdate['GroupId'] ) )
 
     return result
 
