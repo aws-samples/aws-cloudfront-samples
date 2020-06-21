@@ -13,6 +13,12 @@ your security groups that are properly tagged will be updated accordingly.
 
 For more information on ip-ranges.json, read the documentation on [AWS IP Address Ranges](http://docs.aws.amazon.com/general/latest/gr/aws-ip-ranges.html).
 
+## amazon-cloudfront-staging-to-production
+
+This is a python command line script that replicates staging distribution to production.
+
+You can define environment variables separately and pipeline your changes.
+
 ***
 
 Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
