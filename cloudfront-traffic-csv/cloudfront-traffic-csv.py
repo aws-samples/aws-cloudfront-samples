@@ -5,19 +5,6 @@ import datetime, dateutil
 #GLOBAL_SETTINGS
 timezone = datetime.timezone(datetime.timedelta(hours=9)) #UTC +9
 
-#EMAIL SETTING
-email_server = 'email-smtp.us-east-1.amazonaws.com'
-email_port = 587
-email_user = 'AKIA5OC7MR4SH3V7TGH3'
-email_password = 'BMQ3oljMJoa0L/aMvaFcUNceQOHF2t6fiDXqz5TyULZR'
-from_address = 'no-reply@lakil.org'
-to_address = 'juyoon@amazon.com'
-subject = 'CloudFront Usage report'
-message = '''
-    Data from CloudWatch is attached.
-    This is coming from CloudWatch.
-    '''
-
 #global resource to connect API
 cf_client = boto3.client('cloudfront')
 
