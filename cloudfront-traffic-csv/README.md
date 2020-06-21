@@ -5,13 +5,9 @@ This script pulls Amazon CloudFront metric from CloudWatch, which can be modifie
 
 ### Usage:
 ```
-python cloudfront-traffic-csv.py <Startdate %Y-%m-%d> <Enddate %Y-%m-%d> [metric=<BytesDownloaded|Requests|BytesUploaded>] [tag=tag_key] [mailto=receive@mail.com]
+python cloudfront-traffic-csv.py <Startdate %Y-%m-%d> <Enddate %Y-%m-%d> [--metric <BytesDownloaded|Requests|BytesUploaded>] [--tag tag_key]
 ```
 You can use command line to pull bytedownload and store to csv
 ```
 python cloudfront-traffic-csv.py 2020-01-01 2020-05-31 > result.csv
-```
-or your can send it via e-mail
-```
-python cloudfront-traffic-csv.py 2020-01-01 2020-05-31 BytesDownloaded mailto=my@example.com
 ```
