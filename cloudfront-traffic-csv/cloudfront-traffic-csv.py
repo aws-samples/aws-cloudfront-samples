@@ -69,21 +69,21 @@ def get_traffic_csv_list(start_date, end_date, metric_name, reporting_tag=''):
 
     return csv
 
-#BEGINNING OF MAIN LOGIC
-#define command arguments
-parser = argparse.ArgumentParser(description='Read CloudWatch Metric of all CloudFront distribution')
-parser.add_argument('startdate', action='store', type=lambda x: datetime.datetime.strptime(x, '%Y-%m-%d').replace(tzinfo=timezone),
-    help='Start date of data period, YYYY-MM-DD.')
-parser.add_argument('enddate', action='store', type=lambda x: datetime.datetime.strptime(x+' 23:59:59', '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone), 
-    help='End date of data period, YYYY-MM-DD.')
-parser.add_argument('-m','--metric', default='BytesDownloaded', choices=['BytesDownloaded','Requests', 'BytesUploaded'],
-    help='Reporting metric, default is BytesDownloaded')
-parser.add_argument('-t','--tag', help='Reporting Tag key')
+if __name__ == '__main__':
+    #define command arguments
+    parser = argparse.ArgumentParser(description='Read CloudWatch Metric of all CloudFront distribution')
+    parser.add_argument('startdate', action='store', type=lambda x: datetime.datetime.strptime(x, '%Y-%m-%d').replace(tzinfo=timezone),
+        help='Start date of data period, YYYY-MM-DD.')
+    parser.add_argument('enddate', action='store', type=lambda x: datetime.datetime.strptime(x+' 23:59:59', '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone), 
+        help='End date of data period, YYYY-MM-DD.')
+    parser.add_argument('-m','--metric', default='BytesDownloaded', choices=['BytesDownloaded','Requests', 'BytesUploaded'],
+        help='Reporting metric, default is BytesDownloaded')
+    parser.add_argument('-t','--tag', help='Reporting Tag key')
 
-args = parser.parse_args()
+    args = parser.parse_args()
 
-#call functions
-csv_list = get_traffic_csv_list(args.startdate, args.enddate, args.metric, args.tag)
+    #call functions
+    csv_list = get_traffic_csv_list(args.startdate, args.enddate, args.metric, args.tag)
 
-for line in csv_list:
-    print(line)
+    for line in csv_list:
+        print(line)
