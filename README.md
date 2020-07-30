@@ -17,7 +17,11 @@ For more information on ip-ranges.json, read the documentation on [AWS IP Addres
 
 This is a python command line script that replicates staging distribution to production.
 
-You can define environment variables separately and pipeline your changes.
+You can define environment variables separately and pipeline your changes.  
+
+## cloudfront-traffic-csv
+
+This script pulls out CloudWatch metric of Amazon CloudFront distributions into comma separated format.  
 
 ***
 
