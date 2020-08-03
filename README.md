@@ -13,6 +13,12 @@ your security groups that are properly tagged will be updated accordingly.
 
 For more information on ip-ranges.json, read the documentation on [AWS IP Address Ranges](http://docs.aws.amazon.com/general/latest/gr/aws-ip-ranges.html).
 
+## update_security_groups_lambda
+
+This AWS Lambda function is written in Python. It aims to automatically update the WAFv2 IPset when CloudFront IP ranges change.
+
+Setup is similar to what is described in the blog post here, simply replace the Lambda function and ensure the WAFv2 IPSet name contains 'cf-auto-update' - https://aws.amazon.com/blogs/security/how-to-automatically-update-your-security-groups-for-amazon-cloudfront-and-aws-waf-by-using-aws-lambda/
+
 ## amazon-cloudfront-staging-to-production
 
 This is a python command line script that replicates staging distribution to production.
