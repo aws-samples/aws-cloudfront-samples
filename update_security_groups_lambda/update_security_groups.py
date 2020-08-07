@@ -26,6 +26,7 @@ REGION_SG_TAGS = { 'Name': 'cloudfront_r', 'AutoUpdate': 'true' }
 import boto3
 import hashlib
 import json
+import math
 import logging
 import urllib.request, urllib.error, urllib.parse
 import os
@@ -115,8 +116,16 @@ def update_security_groups(new_ranges, rangeType):
             result.append( 'No groups {}'.format(msg) )
             logging.warning( 'No groups {}'.format(msg) )
         else:
-            for securityGroupToUpdate in rangeToUpdate:
-                if update_security_group(client, securityGroupToUpdate, new_ranges, INGRESS_PORTS[curGroup] ):
+            # Check Group first (each group has 50 ip rules)
+            if len(rangeToUpdate) * 50 < len(new_ranges):
+                result.append('{}  Groups is not enough, we need {} at least!'.format(rangeType, str(math.ceil(len(new_ranges) / 50))))
+                return result
+
+            # Group new_ranges into groups what each has ceil(len(new_ranges) / len(rangeToUpdate)).
+            rules_num = math.ceil(len(new_ranges) / len(rangeToUpdate))
+            for i in range(len(rangeToUpdate)):
+                securityGroupToUpdate = rangeToUpdate[i]
+                if update_security_group(client, securityGroupToUpdate, new_ranges[i*rules_num:(i+1)*rules_num], INGRESS_PORTS[curGroup] ):
                     result.append('Security Group {} updated.'.format( securityGroupToUpdate['GroupId'] ) )
                 else:
                     result.append('Security Group {} unchanged.'.format( securityGroupToUpdate['GroupId'] ) )
