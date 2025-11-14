@@ -86,7 +86,7 @@ Now that you have created your function, it’s time to test it and initialize y
         "Signature": "EXAMPLE",
         "SigningCertUrl": "EXAMPLE",
         "MessageId": "95df01b4-ee98-5cb9-9903-4c221d41eb5e",
-        "Message": "{\"create-time\": \"yyyy-mm-ddThh:mm:ss+00:00\", \"synctoken\": \"0123456789\", \"md5\": \"7fd59f5c7f5cf643036cbd4443ad3e4b\", \"url\": \"https://ip-ranges.amazonaws.com/ip-ranges.json\"}",
+        "Message": "{\"create-time\": \"yyyy-mm-ddThh:mm:ss+00:00\", \"synctoken\": \"0123456789\", \"md5\": \"604bd94b60e45260a8d26a0b1800831c\", \"url\": \"https://ip-ranges.amazonaws.com/ip-ranges.json\"}",
         "Type": "Notification",
         "UnsubscribeUrl": "EXAMPLE",
         "TopicArn": "arn:aws:sns:EXAMPLE",
