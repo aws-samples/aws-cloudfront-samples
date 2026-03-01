@@ -47,7 +47,7 @@ def lambda_handler(event, context):
     # If you want a different service, set the SERVICE environment variable.
     # It defaults to CLOUDFRONT. Using 'jq' and 'curl' get the list of possible
     # services like this:
-    # curl -s 'https://ip-ranges.amazonaws.com/ip-ranges.json' | jq -r '.prefixes[] | .service' ip-ranges.json | sort -u 
+    #  curl -s 'https://ip-ranges.amazonaws.com/ip-ranges.json' | jq -r '.prefixes[].service' | sort -u
     SERVICE = os.getenv( 'SERVICE', "CLOUDFRONT")
     
     message = json.loads(event['Records'][0]['Sns']['Message'])
