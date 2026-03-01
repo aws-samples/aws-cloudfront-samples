@@ -1,0 +1,17 @@
+{
+  "name": "update_security_groups_lambda_nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "update_security_groups.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.430.0",
+    "lodash": "^4.17.11",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4"
+  }
+}
